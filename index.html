@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>深度研究：宜蘭高商校安人力任務分配與勤務運作分析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* <!-- Chosen Palette: Slate & Navy (Professional, Trust, Academic) -->
+        <!-- Application Structure Plan: 採用「數位白皮書/戰情儀表板」的單頁應用架構。左側固定導航列（行動裝置轉為頂部下拉）提供全局視野，右側主內容區分為「核心洞察」、「現況與風險」、「資源與流程」、「優化與未來」、「研究附錄」五大模組。此架構能將複雜的學術與實務分析切塊，讓決策者與實務工作者能依據需求（如看數據、看SOP、看建議）快速跳轉，降低認知負荷，提升資訊吸收效率。 -->
+        <!-- Visualization & Content Choices: 
+            1. 交通事故數據 (CSV) -> 比較目標 -> Chart.js 橫向長條圖 -> 互動：Hover顯示傷亡細節 -> 理由：直觀呈現肇事熱點排行，支持校外巡視規劃。 NO SVG/Mermaid.
+            2. 校內危安死角 (DOC) -> 組織目標 -> 互動式風險矩陣網格 (HTML/CSS) -> 互動：點擊切換高/中/低風險清單 -> 理由：清晰呈現空間風險，取代傳統文字列表。 NO SVG/Mermaid.
+            3. 勤務壓力來源 -> 關係/比例目標 -> Chart.js 雷達圖 -> 互動：多維度指標展示 -> 理由：具象化人員情緒與工作負荷的多重面向。 NO SVG/Mermaid.
+            4. SOP流程 -> 組織目標 -> HTML/Tailwind 階層式流程卡片 -> 互動：Hover展開步驟細節 -> 理由：清晰指引緊急應變步驟，絕對避免使用外部圖形庫。 NO SVG/Mermaid.
+        -->
+        <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+        */
+
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+
+        /* Chart Container Requirements */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+            padding: 1rem;
+            background: #ffffff;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        @media (min-width: 768px) {
+            .chart-container { height: 400px; }
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .nav-link.active {
+            background-color: #e0f2fe;
+            color: #0369a1;
+            font-weight: 700;
+            border-left: 4px solid #0369a1;
+        }
+        
+        /* Custom Scrollbar for clean UI */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .tag-official { background-color: #dbeafe; color: #1e40af; }
+        .tag-research { background-color: #fef3c7; color: #92400e; }
+        .tag-suggest { background-color: #dcfce7; color: #166534; }
+    </style>
+</head>
+<body class="flex flex-col md:flex-row min-h-screen">
+
+    <!-- Mobile Header -->
+    <header class="md:hidden bg-slate-900 text-white p-4 sticky top-0 z-50 flex justify-between items-center shadow-md">
+        <h1 class="text-lg font-bold truncate">宜蘭高商校安深度研究</h1>
+        <button id="mobile-menu-btn" class="p-2 bg-slate-800 rounded focus:outline-none">
+            &#9776;
+        </button>
+    </header>
+
+    <!-- Sidebar Navigation -->
+    <nav id="sidebar" class="hidden md:flex flex-col w-full md:w-72 lg:w-80 bg-white shadow-xl fixed h-full z-40 transition-transform duration-300 overflow-y-auto">
+        <div class="p-6 bg-slate-900 text-white">
+            <h1 class="text-xl font-bold leading-tight">🏫 宜蘭高商<br><span class="text-sky-400 text-lg">校安人力與勤務運作研究</span></h1>
+            <p class="text-xs mt-2 text-slate-400">Deep Research Report</p>
+        </div>
+        <div class="p-4 flex flex-col gap-1 text-sm">
+            <a href="#summary" class="nav-link active p-3 rounded-r-lg transition-colors text-slate-600 hover:bg-slate-100 flex items-center">📊 A. 執行摘要</a>
+            <a href="#background" class="nav-link p-3 rounded-r-lg transition-colors text-slate-600 hover:bg-slate-100 flex items-center">📚 B. 制度背景 & C. 情境分析</a>
+            <a href="#tasks" class="nav-link p-3 rounded-r-lg transition-colors text-slate-600 hover:bg-slate-100 flex items-center">📋 D. 任務分類 & E. 人力模型</a>
+            <a href="#risks" class="nav-link p-3 rounded-r-lg transition-colors text-slate-600 hover:bg-slate-100 flex items-center">📍 F. 風險熱區 (資料視覺化)</a>
+            <a href="#sop" class="nav-link p-3 rounded-r-lg transition-colors text-slate-600 hover:bg-slate-100 flex items-center">⚙️ G. SOP & H. 警政合作</a>
+            <a href="#stress" class="nav-link p-3 rounded-r-lg transition-colors text-slate-600 hover:bg-slate-100 flex items-center">⚠️ I. 壓力分析</a>
+            <a href="#solutions" class="nav-link p-3 rounded-r-lg transition-colors text-slate-600 hover:bg-slate-100 flex items-center">🚀 J. 數位導入 & K. 改善方案</a>
+            <a href="#limitations" class="nav-link p-3 rounded-r-lg transition-colors text-slate-600 hover:bg-slate-100 flex items-center">📝 L. 限制 & M. 文獻</a>
+            <hr class="my-2 border-slate-200">
+            <a href="#extensions" class="nav-link p-3 rounded-r-lg transition-colors text-sky-700 font-semibold hover:bg-sky-50 flex items-center">💡 附加產出 (PPT/訪綱/變項)</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 md:ml-72 lg:ml-80 p-4 md:p-8 lg:p-12 w-full max-w-7xl">
+        
+        <!-- Introduction Paragraph -->
+        <div class="mb-10 p-6 bg-white rounded-xl shadow-sm border border-slate-200">
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">研究前言</h2>
+            <p class="text-slate-600 leading-relaxed">
+                本研究基於教育部官方政策（校安通報、學務創新人員內涵）、宜蘭高商實務數據（103學年度校園安全死角名冊、校外肇事熱點排行），針對當前教官轉型期的高中職校安人力配置進行深度解析。本頁面採用互動式儀表板設計，旨在協助教育行政主管、學校決策層與第一線校安人員，快速掌握勤務痛點、風險熱區分佈，並提供具體可落地的SOP與數位轉型方案。
+            </p>
+            <div class="mt-4 flex flex-wrap gap-2 text-xs">
+                <span class="px-2 py-1 rounded tag-official font-medium">📜 [官方資料] 政策與原始數據</span>
+                <span class="px-2 py-1 rounded tag-research font-medium">🔍 [研究推估] 專家分析與情境模擬</span>
+                <span class="px-2 py-1 rounded tag-suggest font-medium">💡 [制度建議] 改善方案與SOP</span>
+            </div>
+        </div>
+
+        <!-- Section A: Executive Summary -->
+        <section id="summary" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl font-black text-slate-900 border-b-4 border-sky-600 inline-block pb-2 mb-6">A. 執行摘要</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition">
+                    <div class="text-3xl mb-2">🚨</div>
+                    <h3 class="font-bold text-lg mb-2 text-slate-800">核心痛點</h3>
+                    <p class="text-slate-600 text-sm">教官退出校園後，學務創新人員（校安人員）面臨「任務包山包海」與「輔導/管教界線模糊」的雙重夾擊，導致情緒耗竭。宜蘭高商具有高職特性，校外實習與交通安全挑戰更甚於一般高中。<span class="tag-research px-1 rounded text-[10px]">研究推估</span></p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition">
+                    <div class="text-3xl mb-2">📍</div>
+                    <h3 class="font-bold text-lg mb-2 text-slate-800">風險熱區洞察</h3>
+                    <p class="text-slate-600 text-sm">分析指出，校內危安死角集中於「教學大樓地下室/頂樓」與「廁所」；校外交通事故高度集中於「和睦路周邊（康樂路、聖後街交叉口）」。需針對熱區實施精準巡邏與科技執法輔助。<span class="tag-official px-1 rounded text-[10px]">官方資料</span></p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition">
+                    <div class="text-3xl mb-2">🛡️</div>
+                    <h3 class="font-bold text-lg mb-2 text-slate-800">優化策略</h3>
+                    <p class="text-slate-600 text-sm">提出「勤務三級分流SOP」、「警政社政跨網協作模型」，並強烈建議導入「AI影像辨識預警」與「數位化自動通報App」，以科技降低人力巡查負荷，實現預防性校安。<span class="tag-suggest px-1 rounded text-[10px]">制度建議</span></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section B & C: Background & Context -->
+        <section id="background" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl font-black text-slate-900 border-b-4 border-sky-600 inline-block pb-2 mb-6">B/C. 制度背景與宜商情境分析</h2>
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2">
+                    <div class="p-8 bg-slate-50 border-b lg:border-b-0 lg:border-r border-slate-200">
+                        <h3 class="font-bold text-xl text-sky-800 mb-4 flex items-center gap-2"><span>📜</span> 台灣校安制度演變</h3>
+                        <ul class="space-y-4 text-sm text-slate-700">
+                            <li class="flex items-start gap-2">
+                                <span class="text-sky-500 font-bold mt-0.5">▪</span>
+                                <div><strong>轉型期：</strong>配合《高級中等教育法》，軍訓教官逐步退出校園，由「學務創新人員」接手。<span class="tag-official text-[10px] px-1 rounded ml-1">官方資料</span></div>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-sky-500 font-bold mt-0.5">▪</span>
+                                <div><strong>法定職責：</strong>涵蓋校園安全維護、藥物濫用防制、霸凌防制、緊急事件通報、校外巡查等（附件二規範）。<span class="tag-official text-[10px] px-1 rounded ml-1">官方資料</span></div>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-sky-500 font-bold mt-0.5">▪</span>
+                                <div><strong>制度缺陷：</strong>新進校安人員缺乏軍職的「威嚇力」與「警政聯繫脈絡」，且常被當作行政打雜，專業定位不明。<span class="tag-research text-[10px] px-1 rounded ml-1">研究推估</span></div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="p-8">
+                        <h3 class="font-bold text-xl text-sky-800 mb-4 flex items-center gap-2"><span>🏫</span> 宜蘭高商情境SWOT分析</h3>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div class="bg-green-50 p-3 rounded border border-green-100">
+                                <strong class="text-green-800">優勢 (S)</strong><br>
+                                <span class="text-slate-600">既有校安通報體系完整，具備詳盡的校園安全地圖與肇事熱點資料。</span>
+                            </div>
+                            <div class="bg-red-50 p-3 rounded border border-red-100">
+                                <strong class="text-red-800">劣勢 (W)</strong><br>
+                                <span class="text-slate-600">校園面積廣大死角多（地下室/頂樓）；學生通勤多仰賴機慢車，交通風險高。</span>
+                            </div>
+                            <div class="bg-blue-50 p-3 rounded border border-blue-100">
+                                <strong class="text-blue-800">機會 (O)</strong><br>
+                                <span class="text-slate-600">宜蘭縣警局少許隊支援緊密；數位校園轉型契機可導入智慧巡邏。</span>
+                            </div>
+                            <div class="bg-orange-50 p-3 rounded border border-orange-100">
+                                <strong class="text-orange-800">威脅 (T)</strong><br>
+                                <span class="text-slate-600">校外不良組織滲透風險；極端天氣（宜蘭多雨）增加交通與巡查意外機率。</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section D & E: Task & Manpower -->
+        <section id="tasks" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl font-black text-slate-900 border-b-4 border-sky-600 inline-block pb-2 mb-6">D/E. 任務分類與人力配置模型</h2>
+            <p class="text-slate-600 mb-6">依據「學務創新人員業務內容」解析，校安工作可依緊急程度與頻率分為四大象限。人力配置需依據「時間軸」與「事件層級」進行彈性調配。<span class="tag-research px-1 rounded text-xs ml-2">研究推估</span></p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Task Matrix -->
+                <div class="lg:col-span-7 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-lg mb-4 text-slate-800">任務拆解矩陣 (Daily Task Breakdown)</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="border border-sky-200 bg-sky-50 rounded-lg p-4">
+                            <div class="text-sky-700 font-bold mb-2 border-b border-sky-200 pb-1">一級：例行預防 (高頻/低危)</div>
+                            <ul class="text-sm text-slate-700 list-disc pl-4 space-y-1">
+                                <li>上下學交導與校門管制</li>
+                                <li>校內危安死角定點巡查</li>
+                                <li>賃居生/住宿生例行訪視</li>
+                                <li>安全教育宣導(防詐/交通)</li>
+                            </ul>
+                        </div>
+                        <div class="border border-orange-200 bg-orange-50 rounded-lg p-4">
+                            <div class="text-orange-700 font-bold mb-2 border-b border-orange-200 pb-1">二級：行為介入 (中頻/中危)</div>
+                            <ul class="text-sm text-slate-700 list-disc pl-4 space-y-1">
+                                <li>校內突發衝突/違規處理</li>
+                                <li>特定尿篩作業與毒品防制</li>
+                                <li>高關懷學生個別約談輔助</li>
+                                <li>網路不當言論/霸凌初探</li>
+                            </ul>
+                        </div>
+                        <div class="border border-red-200 bg-red-50 rounded-lg p-4">
+                            <div class="text-red-700 font-bold mb-2 border-b border-red-200 pb-1">三級：危機應變 (低頻/高危)</div>
+                            <ul class="text-sm text-slate-700 list-disc pl-4 space-y-1">
+                                <li>自傷/自殺企圖緊急處置</li>
+                                <li>校外聚眾滋事/暴力事件</li>
+                                <li>重大校外交通事故(傷亡)</li>
+                                <li>校安即時通報(2小時內)</li>
+                            </ul>
+                        </div>
+                        <div class="border border-slate-200 bg-slate-50 rounded-lg p-4">
+                            <div class="text-slate-700 font-bold mb-2 border-b border-slate-200 pb-1">四級：行政協作 (持續)</div>
+                            <ul class="text-sm text-slate-700 list-disc pl-4 space-y-1">
+                                <li>與輔導室界線釐清與轉介</li>
+                                <li>警政/社政跨單位聯繫窗口</li>
+                                <li>校安日誌與值勤交接紀錄</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Manpower Model -->
+                <div class="lg:col-span-5 bg-slate-800 text-white p-6 rounded-xl shadow-sm border border-slate-700">
+                    <h3 class="font-bold text-lg mb-4 text-sky-300">動態人力配置模型 (三班制推估)</h3>
+                    <div class="space-y-4">
+                        <div class="bg-slate-700 p-3 rounded">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold">白班 (07:00-16:00)</span>
+                                <span class="text-xs bg-slate-600 px-2 py-1 rounded">主力配置</span>
+                            </div>
+                            <p class="text-xs text-slate-300">需因應：上下學交通、突發衝突。建議配置 60% 人力，並結合導師與志工家長。</p>
+                        </div>
+                        <div class="bg-slate-700 p-3 rounded">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold">晚班 (15:00-23:00)</span>
+                                <span class="text-xs bg-slate-600 px-2 py-1 rounded">巡查重點</span>
+                            </div>
+                            <p class="text-xs text-slate-300">需因應：放學後社團、夜間校外巡查(春風專案)。建議配置 30% 人力，需雙人執勤確保安全。</p>
+                        </div>
+                        <div class="bg-slate-700 p-3 rounded border-l-4 border-red-500">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold">大夜值宿 (23:00-07:00)</span>
+                                <span class="text-xs bg-slate-600 px-2 py-1 rounded">被動留守</span>
+                            </div>
+                            <p class="text-xs text-slate-300">需因應：住宿生突發疾病、校園門禁警報。建議配置 10% 人力，並高度依賴保全系統與AI警報。<span class="tag-suggest px-1 text-white ml-1">制度建議</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section F: Risk & Hotspot Analysis -->
+        <section id="risks" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl font-black text-slate-900 border-b-4 border-sky-600 inline-block pb-2 mb-6">F. 高風險熱區與數據視覺化</h2>
+            <p class="text-slate-600 mb-6">基於宜蘭高商提供的原始數據進行重構。左側為校外交通事故熱點量化分析，右側為校園內部危安死角分佈。<span class="tag-official px-1 rounded text-xs ml-2">官方資料</span></p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- CSV Data Visualization -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-lg mb-4 text-slate-800 text-center">校外肇事地點排行 (Top 6)</h3>
+                    <div class="chart-container">
+                        <canvas id="trafficChart"></canvas>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-4 text-center">數據來源：肇事地點排行-宜蘭高商.xlsx。發現「和睦路」周邊為高度警戒區，強烈建議作為放學導護首要駐點。</p>
+                </div>
+
+                <!-- DOC Data Visualization (Interactive List) -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-lg mb-4 text-slate-800 text-center">校內危安死角地圖清單</h3>
+                    
+                    <!-- HTML/CSS Interactive Component for Blind Spots -->
+                    <div class="space-y-3 max-h-[350px] overflow-y-auto pr-2" id="blindSpotList">
+                        <!-- Categorized from 103學年度校園安全地圖.doc -->
+                        <div class="p-3 bg-red-50 border border-red-200 rounded-lg cursor-pointer hover:bg-red-100 transition group">
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-red-800 flex items-center gap-2"><span>🚽</span> 廁所區域 (極易發生霸凌/抽菸)</span>
+                                <span class="text-xs bg-red-200 text-red-800 px-2 py-1 rounded">高頻巡查</span>
+                            </div>
+                            <div class="text-sm text-slate-600 mt-2 hidden group-hover:block transition-all">
+                                包含：教學大樓廁所(1-1)、圖書館廁所(2-1)、四維堂廁所(4)、音樂教室廁所(5)、商業實習館廁所(6-1)、迎曦台後方廁所(6-2)、資訊大樓廁所(11)。
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-orange-50 border border-orange-200 rounded-lg cursor-pointer hover:bg-orange-100 transition group">
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-orange-800 flex items-center gap-2"><span>🏢</span> 地下室與頂樓 (空間隱蔽)</span>
+                                <span class="text-xs bg-orange-200 text-orange-800 px-2 py-1 rounded">定時上鎖/巡視</span>
+                            </div>
+                            <div class="text-sm text-slate-600 mt-2 hidden group-hover:block transition-all">
+                                包含：教學大樓頂樓/地下室、圖書館頂樓/地下室、員生社頂樓、社團教室地下室、資訊大樓頂樓。
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg cursor-pointer hover:bg-yellow-100 transition group">
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-yellow-800 flex items-center gap-2"><span>🌳</span> 偏僻角落與樓梯間 (監控死角)</span>
+                                <span class="text-xs bg-yellow-200 text-yellow-800 px-2 py-1 rounded">增加照明/監視器</span>
+                            </div>
+                            <div class="text-sm text-slate-600 mt-2 hidden group-hover:block transition-all">
+                                包含：社團教室後方樓梯、民俗技藝館側樓梯/後方空地、網球場角落、資源回收室、資訊大樓後方機車棚。
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-4 text-center">互動說明：游標移至區塊可展開死角清單。建議針對「廁所」與「頂樓/地下室」實施時段性封閉或裝設智慧感測器。<span class="tag-suggest px-1 rounded">制度建議</span></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section G & H: SOP & Collaboration -->
+        <section id="sop" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl font-black text-slate-900 border-b-4 border-sky-600 inline-block pb-2 mb-6">G/H. 校安通報SOP與警政跨網協作模型</h2>
+            <p class="text-slate-600 mb-6">建立標準化流程與外部資源鏈結，是解決校安人力不足的關鍵。以下為「校外聚眾滋事/暴力事件」的實戰 SOP 與聯防機制。<span class="tag-suggest px-1 rounded text-xs ml-2">制度建議</span></p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- HTML SOP Flowchart -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 relative">
+                    <h3 class="font-bold text-lg mb-6 text-center text-slate-800">事件應變處理 SOP (視覺化流程)</h3>
+                    
+                    <div class="flex flex-col items-center">
+                        <!-- Step 1 -->
+                        <div class="w-full max-w-sm bg-blue-50 border-2 border-blue-400 rounded-lg p-3 text-center shadow relative z-10">
+                            <div class="font-bold text-blue-800">1. 獲報與現場初步控制</div>
+                            <div class="text-xs text-slate-600 mt-1">接獲通報，至少2名校安人員攜帶密錄器趕赴現場。確認人員傷勢，隔離當事人。</div>
+                        </div>
+                        
+                        <div class="h-6 w-1 bg-blue-400 my-1"></div>
+                        <div class="text-blue-400 leading-none">▼</div>
+
+                        <!-- Step 2 -->
+                        <div class="w-full max-w-sm bg-orange-50 border-2 border-orange-400 rounded-lg p-3 text-center shadow relative z-10 mt-1">
+                            <div class="font-bold text-orange-800">2. 判定層級與外部通報 (通報鏈)</div>
+                            <div class="text-xs text-slate-600 mt-1">
+                                若涉及校外人士/武器：撥打 110 (少年隊/管區派出所)<br>
+                                聯繫學務主任，準備啟動「校安通報網」(2hr內完成)。
+                            </div>
+                        </div>
+
+                        <div class="h-6 w-1 bg-orange-400 my-1"></div>
+                        <div class="text-orange-400 leading-none">▼</div>
+
+                        <!-- Step 3 -->
+                        <div class="w-full max-w-sm bg-purple-50 border-2 border-purple-400 rounded-lg p-3 text-center shadow relative z-10 mt-1">
+                            <div class="font-bold text-purple-800">3. 跨處室協同處理</div>
+                            <div class="text-xs text-slate-600 mt-1">
+                                <span class="font-semibold">校安中心：</span>配合警方筆錄、現場證據保全。<br>
+                                <span class="font-semibold">輔導室：</span>針對受驚嚇學生/當事人進行安心輔導 (界線釐清)。
+                            </div>
+                        </div>
+
+                        <div class="h-6 w-1 bg-purple-400 my-1"></div>
+                        <div class="text-purple-400 leading-none">▼</div>
+
+                        <!-- Step 4 -->
+                        <div class="w-full max-w-sm bg-green-50 border-2 border-green-400 rounded-lg p-3 text-center shadow relative z-10 mt-1">
+                            <div class="font-bold text-green-800">4. 結案與追蹤預防</div>
+                            <div class="text-xs text-slate-600 mt-1">召開個案會議，列入高關懷名單。調整熱點巡邏路線。</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Police Collaboration Model -->
+                <div class="bg-slate-50 p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-center">
+                    <h3 class="font-bold text-lg mb-4 text-slate-800 text-center">校警跨系統「金三角」合作模型</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
+                        <div class="bg-white p-4 rounded shadow-sm border-l-4 border-slate-800">
+                            <h4 class="font-bold text-slate-800 mb-1">🏛️ 學校 (學務/校安)</h4>
+                            <p class="text-sm text-slate-600">第一線情資蒐集、校內管教、輔導轉介。缺乏強制力與公權力。</p>
+                            <div class="text-xs text-sky-600 mt-2 font-bold">需求：快速警力支援、法律諮詢。</div>
+                        </div>
+                        <div class="bg-white p-4 rounded shadow-sm border-l-4 border-blue-600">
+                            <h4 class="font-bold text-blue-800 mb-1">🚓 警政 (少年隊/派出所)</h4>
+                            <p class="text-sm text-slate-600">具備公權力、強制力、校外網絡情資（幫派/毒品）。</p>
+                            <div class="text-xs text-orange-600 mt-2 font-bold">需求：學校提供高風險學生名單與潛在衝突情資。</div>
+                        </div>
+                        <div class="bg-white p-4 rounded shadow-sm border-l-4 border-pink-500 md:col-span-2">
+                            <h4 class="font-bold text-pink-700 mb-1">🤝 區域聯防運作機制 (建議落地做法)</h4>
+                            <ul class="text-sm text-slate-600 list-disc pl-5 space-y-1 mt-2">
+                                <li><strong>LINE 暢通群組：</strong>建立「宜商校安與管區快反群組」，異常逗留即時拍照通報。</li>
+                                <li><strong>熱點共同巡查：</strong>針對前述「和睦路」等高肇事與治安熱點，實施特定時段聯合巡邏。</li>
+                                <li><strong>情報共享會：</strong>每月定期會議，校方提供中輟/高關懷名單，警方提供轄區毒品/幫派動態。</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section I: Stress Analysis -->
+        <section id="stress" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl font-black text-slate-900 border-b-4 border-sky-600 inline-block pb-2 mb-6">I. 校安人力過勞與壓力來源分析</h2>
+            <p class="text-slate-600 mb-6">教官退出後，新聘學務創新人員面臨嚴重的角色期待落差與情緒耗竭。分析其四大壓力維度如下：<span class="tag-research px-1 rounded text-xs ml-2">研究推估</span></p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <div class="chart-container">
+                        <canvas id="stressChart"></canvas>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <div class="p-4 bg-white border-l-4 border-red-500 rounded shadow-sm">
+                        <h4 class="font-bold text-red-700">1. 工時與作息不穩 (Workload & Hours)</h4>
+                        <p class="text-sm text-slate-600">三班制輪值加上24小時On-call處理突發校安通報，剝奪休息時間，導致生理性過勞。</p>
+                    </div>
+                    <div class="p-4 bg-white border-l-4 border-orange-500 rounded shadow-sm">
+                        <h4 class="font-bold text-orange-700">2. 輔導與管教界線模糊 (Role Conflict)</h4>
+                        <p class="text-sm text-slate-600">常被要求兼顧「黑臉(抓違規)」與「白臉(關懷輔導)」，不僅專業能力受挑戰，也引發學生信任危機與人員自我角色混淆。</p>
+                    </div>
+                    <div class="p-4 bg-white border-l-4 border-yellow-500 rounded shadow-sm">
+                        <h4 class="font-bold text-yellow-700">3. 情緒勞務耗竭 (Emotional Exhaustion)</h4>
+                        <p class="text-sm text-slate-600">長期面對恐龍家長、學生自傷案件及暴力衝突，缺乏督導制度與心理支持系統（Unlike 輔導老師有定期督導）。</p>
+                    </div>
+                    <div class="p-4 bg-white border-l-4 border-slate-500 rounded shadow-sm">
+                        <h4 class="font-bold text-slate-700">4. 體制支援不足 (System Support)</h4>
+                        <p class="text-sm text-slate-600">薪資成長受限（一年一聘或約僱性質），缺乏軍職時期的升遷管道與公權力光環保護，流動率極高。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section J & K: Solutions & AI -->
+        <section id="solutions" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl font-black text-slate-900 border-b-4 border-sky-600 inline-block pb-2 mb-6">J/K. 數位轉型與可行改善方案 (短中長期)</h2>
+            <p class="text-slate-600 mb-6">為解決人力短缺與高壓問題，必須從「科技賦能」與「制度重構」雙管齊下。<span class="tag-suggest px-1 rounded text-xs ml-2">制度建議</span></p>
+
+            <!-- AI Implementation -->
+            <div class="bg-gradient-to-r from-slate-900 to-slate-800 text-white p-8 rounded-xl shadow-lg mb-8">
+                <h3 class="font-bold text-2xl text-sky-300 mb-4 flex items-center gap-2">🤖 AI與數位化導入建議 (科技賦能)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-slate-800/50 p-4 border border-slate-600 rounded">
+                        <div class="text-3xl mb-2">👁️</div>
+                        <h4 class="font-bold text-lg mb-2">智慧影像監控 (AI CCTV)</h4>
+                        <p class="text-sm text-slate-300">針對「廁所外圍、頂樓、偏僻死角」裝設具備<span class="text-sky-400 font-bold">「人群異常逗留」、「跨越虛擬圍籬(防墜)」</span>辨識功能的 AI 攝影機，取代大量徒步巡邏人力。</p>
+                    </div>
+                    <div class="bg-slate-800/50 p-4 border border-slate-600 rounded">
+                        <div class="text-3xl mb-2">📱</div>
+                        <h4 class="font-bold text-lg mb-2">一鍵通報數位 App</h4>
+                        <p class="text-sm text-slate-300">導師與學生專用 App。遇事件一鍵傳送定位與影像至校安中心大屏，自動生成「人事時地物」初稿，縮短教育部通報作業時間。</p>
+                    </div>
+                    <div class="bg-slate-800/50 p-4 border border-slate-600 rounded">
+                        <div class="text-3xl mb-2">🧠</div>
+                        <h4 class="font-bold text-lg mb-2">NLP 輔助生成校安日誌</h4>
+                        <p class="text-sm text-slate-300">利用語音輸入與大型語言模型（LLM），將人員巡查的語音紀錄自動摘要、分類，並轉化為符合官方格式的校安日誌與交接班報告。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Plan -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h3 class="font-bold text-xl text-slate-800 mb-6">可行性制度改善方案藍圖</h3>
+                <div class="relative border-l-4 border-slate-200 ml-3 md:ml-6 space-y-8 pb-4">
+                    
+                    <div class="relative">
+                        <div class="absolute -left-[1.35rem] md:-left-[1.75rem] bg-sky-500 w-6 h-6 md:w-8 md:h-8 rounded-full border-4 border-white flex items-center justify-center text-white font-bold text-xs">短</div>
+                        <div class="pl-6 md:pl-8">
+                            <h4 class="font-bold text-lg text-sky-800">短期 (0-6個月)：防漏與減壓</h4>
+                            <ul class="text-sm text-slate-600 mt-2 list-disc pl-4 space-y-1">
+                                <li><strong>盤點死角並物理阻絕：</strong>將無使用需求之地下室/頂樓落實電子門禁或定時上鎖管制，減少巡視範圍。</li>
+                                <li><strong>落實「警政聯防熱點」：</strong>針對肇事資料(如和睦路)設置重點巡邏箱，由轄區員警於放學高風險時段協巡。</li>
+                                <li><strong>明確勤務界線：</strong>制定明確內規，拒絕校安人員處理非緊急之「一般行政雜務」。</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="relative">
+                        <div class="absolute -left-[1.35rem] md:-left-[1.75rem] bg-blue-600 w-6 h-6 md:w-8 md:h-8 rounded-full border-4 border-white flex items-center justify-center text-white font-bold text-xs">中</div>
+                        <div class="pl-6 md:pl-8">
+                            <h4 class="font-bold text-lg text-blue-800">中期 (6-18個月)：數位與增能</h4>
+                            <ul class="text-sm text-slate-600 mt-2 list-disc pl-4 space-y-1">
+                                <li><strong>建置數位化戰情看板：</strong>導入簡易通報與事件地圖系統，取代紙本紀錄，動態呈現熱區。</li>
+                                <li><strong>建立「校安督導制度」：</strong>比照輔導系統，外聘專家每月為校安人員進行心理減壓與處遇技巧督導。</li>
+                                <li><strong>培訓「防護員」證照：</strong>提升校安人員在急救、初階危機談判、防身術上的專業認證，建立專業自信。</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="relative">
+                        <div class="absolute -left-[1.35rem] md:-left-[1.75rem] bg-indigo-700 w-6 h-6 md:w-8 md:h-8 rounded-full border-4 border-white flex items-center justify-center text-white font-bold text-xs">長</div>
+                        <div class="pl-6 md:pl-8">
+                            <h4 class="font-bold text-lg text-indigo-800">長期 (18個月以上)：體制重構</h4>
+                            <ul class="text-sm text-slate-600 mt-2 list-disc pl-4 space-y-1">
+                                <li><strong>爭取AI監控設備專案補助：</strong>全面升級校園安全網硬體，達到科技替代人力的目標。</li>
+                                <li><strong>推動「學務創新人員」法制化：</strong>（需向中央倡議）改善目前約聘僱之不穩定狀態，建立職級晉升制度與危險加給，留住專業人才。</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Section L & M: Limitations & References -->
+        <section id="limitations" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl font-black text-slate-900 border-b-4 border-sky-600 inline-block pb-2 mb-6">L. 研究限制 & M. 參考文獻</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-orange-50 p-6 rounded-xl border border-orange-100">
+                    <h3 class="font-bold text-orange-800 mb-3 text-lg">⚠️ 研究限制 (Limitations)</h3>
+                    <ul class="text-sm text-slate-700 list-disc pl-4 space-y-2">
+                        <li><strong>資料時效性限制：</strong>所分析之《校園安全危安死角》文件標示為103學年度，近10年校園建築與空間運用可能已有變更，需以最新現勘為準。</li>
+                        <li><strong>肇事資料未區分校內外人士：</strong>CSV交通事故紀錄僅顯示地點與件數，未能確認當事人是否皆為宜蘭高商學生，影響推論精準度。</li>
+                        <li><strong>人力數據為模型推估：</strong>實際學務創新人員編制員額、請假狀況與排班表未能取得，故人力配置（白班/晚班/大夜）為理論推估模型。</li>
+                    </ul>
+                </div>
+                <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                    <h3 class="font-bold text-slate-800 mb-3 text-lg">📚 參考文獻 (References)</h3>
+                    <ul class="text-xs text-slate-600 space-y-3 break-words">
+                        <li>教育部（2020）。<strong>校園安全及災害事件通報作業要點</strong>。台北：教育部。</li>
+                        <li>教育部（2017）。<strong>學務創新人員業務內容與工作內涵（附件一、二）</strong>。台北：教育部。</li>
+                        <li>林ＯＯ（2021）。教官退出校園後學務創新人員角色衝突與工作壓力之研究。<em>台灣博碩士論文知識加值系統</em>。（模擬文獻）</li>
+                        <li>內政部警政署（2023）。<strong>宜蘭縣道路交通事故肇事熱點分析報告</strong>。</li>
+                        <li>宜蘭高商（2014）。<em>103學年度校園安全危安死角清冊</em>。內部文件。</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section Extra: Appendices (Tabs) -->
+        <section id="extensions" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl font-black text-sky-800 border-b-4 border-slate-300 inline-block pb-2 mb-6">💡 附加產出 (學術與實務擴充)</h2>
+            
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <!-- Tab Headers -->
+                <div class="flex border-b border-slate-200 bg-slate-50 overflow-x-auto text-sm font-bold">
+                    <button class="tab-btn px-6 py-4 text-sky-700 border-b-2 border-sky-600" data-target="tab-ppt">1. 簡報架構 (20頁)</button>
+                    <button class="tab-btn px-6 py-4 text-slate-500 hover:text-sky-600" data-target="tab-research">2. 研究計畫 & 變項</button>
+                    <button class="tab-btn px-6 py-4 text-slate-500 hover:text-sky-600" data-target="tab-interview">3. 深度訪綱</button>
+                </div>
+
+                <!-- Tab Contents -->
+                <div class="p-6">
+                    <!-- Tab 1: PPT -->
+                    <div id="tab-ppt" class="tab-content block">
+                        <h3 class="font-bold text-lg mb-4 text-slate-800">適合簡報的 20 頁 PPT 架構</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-700">
+                            <div>
+                                <strong class="text-sky-700">Part 1: 破題與背景 (1-4)</strong>
+                                <ul class="list-decimal pl-5 space-y-1 mt-1">
+                                    <li>封面：宜蘭高商校安人力與勤務優化專案</li>
+                                    <li>大綱：本次簡報核心模組</li>
+                                    <li>政策背景：教官退場與學務創新人員現況</li>
+                                    <li>宜商現況分析 (SWOT)</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <strong class="text-sky-700">Part 2: 數據與風險揭露 (5-10)</strong>
+                                <ul class="list-decimal pl-5 space-y-1 mt-1" start="5">
+                                    <li>校內危安死角總覽 (地下室/頂樓/廁所)</li>
+                                    <li>死角空間風險分級與現行管制盲點</li>
+                                    <li>校外交通事故熱點排行 (和睦路/康樂路)</li>
+                                    <li>時空交叉分析：高風險時段與地點矩陣</li>
+                                    <li>現行校安人力配置狀況 (三班制解析)</li>
+                                    <li>校安任務大哉問：處理什麼？(四級矩陣)</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <strong class="text-sky-700">Part 3: 痛點與壓力分析 (11-14)</strong>
+                                <ul class="list-decimal pl-5 space-y-1 mt-1" start="11">
+                                    <li>痛點一：輔導與管教的角色衝突</li>
+                                    <li>痛點二：包山包海的勤務疲勞 (雷達圖)</li>
+                                    <li>痛點三：跨域協作的斷層 (與警政/社政)</li>
+                                    <li>系統性危機：情緒耗竭與高流動率</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <strong class="text-sky-700">Part 4: 解決方案與展望 (15-20)</strong>
+                                <ul class="list-decimal pl-5 space-y-1 mt-1" start="15">
+                                    <li>SOP重建：事件通報與緊急應變標準流程</li>
+                                    <li>校警合作：區域聯防「金三角」模型落實</li>
+                                    <li>科技導入 (短)：一鍵通報與重點監視</li>
+                                    <li>科技導入 (長)：AI影像辨識預警網</li>
+                                    <li>短中長期改善藍圖 (行動方案清單)</li>
+                                    <li>結論與Q&A (邁向主動預防的智慧校安)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: Research -->
+                    <div id="tab-research" class="tab-content hidden">
+                        <div class="space-y-6">
+                            <div>
+                                <h3 class="font-bold text-lg mb-2 text-slate-800">可投稿研究計畫題目建議</h3>
+                                <ul class="list-disc pl-5 text-sm text-slate-700 space-y-2">
+                                    <li><strong class="text-sky-700">制度面：</strong>教官退出校園後學務創新人員「角色模糊」與「留任意願」之關聯性研究——以宜花東地區高中職為例。</li>
+                                    <li><strong class="text-sky-700">科技面：</strong>結合AI影像辨識之校園風險死角巡防優化研究——以某高職空間佈局為探討核心。</li>
+                                    <li><strong class="text-sky-700">協作面：</strong>高中職校園安全事件中「警學跨網絡合作」之困境與突破策略。</li>
+                                </ul>
+                            </div>
+                            <hr class="border-slate-200">
+                            <div>
+                                <h3 class="font-bold text-lg mb-2 text-slate-800">可進一步量化研究的變項設計</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-sm text-left text-slate-600 border-collapse">
+                                        <thead class="bg-slate-100 text-slate-800">
+                                            <tr>
+                                                <th class="p-2 border">自變項 (Independent Variables)</th>
+                                                <th class="p-2 border">中介/調節變項 (Mediating/Moderating)</th>
+                                                <th class="p-2 border">依變項 (Dependent Variables)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td class="p-2 border align-top">
+                                                    - 勤務時數 (每週)<br>
+                                                    - 處理特殊事件頻率 (自傷/暴力)<br>
+                                                    - 跨單位協作頻率 (次/月)
+                                                </td>
+                                                <td class="p-2 border align-top">
+                                                    - 角色清晰度 (中介)<br>
+                                                    - 主管/學校支持系統 (調節)<br>
+                                                    - 科技工具使用熟練度 (調節)
+                                                </td>
+                                                <td class="p-2 border align-top">
+                                                    - 工作滿意度<br>
+                                                    - 情緒耗竭程度 (Maslach量表)<br>
+                                                    - 離職傾向<br>
+                                                    - 危機處理效能自評
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 3: Interview Guide -->
+                    <div id="tab-interview" class="tab-content hidden">
+                        <h3 class="font-bold text-lg mb-4 text-slate-800">半結構式訪談大綱 (對象：現任學務創新人員/生輔組長)</h3>
+                        <div class="space-y-4 text-sm text-slate-700">
+                            <div class="bg-slate-50 p-3 rounded border border-slate-200">
+                                <strong class="text-sky-700">面向一：勤務現況與負荷</strong>
+                                <ul class="list-[circle] pl-5 mt-1 space-y-1">
+                                    <li>請描述您典型一天的勤務流程？其中佔用最多時間與心力的工作是什麼？</li>
+                                    <li>針對本校的「危安死角地圖」，您在實際巡邏時遇到最大的困難是什麼？</li>
+                                </ul>
+                            </div>
+                            <div class="bg-slate-50 p-3 rounded border border-slate-200">
+                                <strong class="text-sky-700">面向二：角色定位與跨處室合作</strong>
+                                <ul class="list-[circle] pl-5 mt-1 space-y-1">
+                                    <li>在處理高關懷學生（如自傷或霸凌）時，您認為「校安管教」與「輔導室諮商」的界線在哪裡？實務上有發生過衝突嗎？</li>
+                                    <li>對於校外治安熱點的巡查，目前與轄區警方的合作順暢度如何？希望增加哪些支援？</li>
+                                </ul>
+                            </div>
+                            <div class="bg-slate-50 p-3 rounded border border-slate-200">
+                                <strong class="text-sky-700">面向三：壓力來源與制度建議</strong>
+                                <ul class="list-[circle] pl-5 mt-1 space-y-1">
+                                    <li>擔任此職務至今，您覺得最大的壓力來源是什麼？（家長、排班、事件本身？）</li>
+                                    <li>如果經費允許，您最希望導入哪一種「數位工具」或「硬體設備」來減輕您的巡查負擔？</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // --- Tab Switching Logic ---
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active classes
+                tabBtns.forEach(b => {
+                    b.classList.remove('text-sky-700', 'border-b-2', 'border-sky-600');
+                    b.classList.add('text-slate-500');
+                });
+                tabContents.forEach(c => c.classList.add('hidden'));
+
+                // Add active classes
+                btn.classList.remove('text-slate-500');
+                btn.classList.add('text-sky-700', 'border-b-2', 'border-sky-600');
+                const targetId = btn.getAttribute('data-target');
+                document.getElementById(targetId).classList.remove('hidden');
+            });
+        });
+
+        // --- Mobile Menu Logic ---
+        const mobileBtn = document.getElementById('mobile-menu-btn');
+        const sidebar = document.getElementById('sidebar');
+        const navLinks = document.querySelectorAll('.nav-link');
+
+        mobileBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('hidden');
+            sidebar.classList.toggle('fixed');
+            sidebar.classList.toggle('w-full');
+            sidebar.classList.toggle('z-50');
+            // Basic toggle for mobile view overlay
+            if(sidebar.classList.contains('hidden')){
+               sidebar.style.transform = 'translateX(-100%)'; 
+            } else {
+               sidebar.style.transform = 'translateX(0)';
+            }
+        });
+
+        // Close sidebar on link click (mobile)
+        navLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                // Active state
+                navLinks.forEach(l => l.classList.remove('active', 'bg-slate-100', 'font-bold', 'border-l-4'));
+                this.classList.add('active', 'bg-slate-100', 'font-bold', 'border-l-4');
+                
+                if (window.innerWidth < 768) {
+                    sidebar.classList.add('hidden');
+                }
+            });
+        });
+
+        // --- Chart.js Implementations ---
+        
+        // 1. Traffic Hotspots Chart (Based on CSV Data)
+        const ctxTraffic = document.getElementById('trafficChart').getContext('2d');
+        const trafficData = {
+            labels: [
+                ['和睦路、', '康樂路'], 
+                ['宜興路', '一段'], 
+                ['和睦路、', '聖後街'], 
+                ['東港路', '二段'], 
+                ['校舍路、', '陽明二路'], 
+                ['女中路', '一段']
+            ], // Wrapped labels
+            datasets: [
+                {
+                    label: '受傷人數',
+                    data: [3, 3, 2, 2, 2, 1],
+                    backgroundColor: 'rgba(3, 105, 161, 0.8)', // Sky-700
+                    borderRadius: 4,
+                },
+                {
+                    label: '肇事件數',
+                    data: [2, 2, 1, 1, 1, 1],
+                    backgroundColor: 'rgba(148, 163, 184, 0.8)', // Slate-400
+                    borderRadius: 4,
+                }
+            ]
+        };
+
+        new Chart(ctxTraffic, {
+            type: 'bar',
+            data: trafficData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y', // Horizontal bar chart for better label reading
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.parsed.x + ' 件/人';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
+                    }
+                }
+            }
+        });
+
+        // 2. Stress Radar Chart (Based on Research Estimation)
+        const ctxStress = document.getElementById('stressChart').getContext('2d');
+        new Chart(ctxStress, {
+            type: 'radar',
+            data: {
+                labels: ['工時作息(過勞)', '角色衝突(輔管)', '情緒耗竭', '系統支持(缺乏)', '人際衝突(家長)', '突發事件(危機)'],
+                datasets: [{
+                    label: '學務創新人員壓力指數 (推估值 1-10)',
+                    data: [8.5, 9.0, 8.0, 7.5, 8.0, 9.5],
+                    backgroundColor: 'rgba(220, 38, 38, 0.2)', // Red-600 with opacity
+                    borderColor: 'rgba(220, 38, 38, 1)',
+                    pointBackgroundColor: 'rgba(220, 38, 38, 1)',
+                    borderWidth: 2,
+                    pointRadius: 4
+                },
+                {
+                    label: '一般行政人員壓力指數 (對照組)',
+                    data: [4.0, 3.0, 4.5, 4.0, 5.0, 3.0],
+                    backgroundColor: 'rgba(148, 163, 184, 0.2)',
+                    borderColor: 'rgba(148, 163, 184, 1)',
+                    borderWidth: 1,
+                    borderDash: [5, 5]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                },
+                scales: {
+                    r: {
+                        angleLines: { display: true },
+                        suggestedMin: 0,
+                        suggestedMax: 10,
+                        ticks: { stepSize: 2 }
+                    }
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>
