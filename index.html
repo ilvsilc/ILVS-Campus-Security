@@ -3,12 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>宜蘭高商校園安全與勤務數據儀表板 (114學年度更新版)</title>
+    <title>整合系統：宜蘭高商校安戰情儀表板與深度研究 (v1.0)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* */
-
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
         
         body {
@@ -17,68 +15,117 @@
             color: #0f172a;
         }
 
+        /* Unified Chart Container */
         .chart-container {
             position: relative;
             width: 100%;
             max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-            height: 300px;
+            margin: 0 auto;
+            height: 350px;
             max-height: 400px;
-            padding: 0.5rem;
+            padding: 1rem;
+            background: #ffffff;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
         }
 
         @media (min-width: 768px) {
-            .chart-container { height: 380px; }
+            .chart-container { height: 400px; }
+        }
+
+        /* Unified Navigation Styles */
+        .nav-group-title {
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.5rem 1rem;
+            margin-top: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .nav-link.active {
-            background-color: #e2e8f0;
-            color: #0f172a;
+            background-color: #1e293b;
+            color: #f8fafc;
             font-weight: 700;
-            border-left: 4px solid #b45309;
+            border-left: 4px solid #38bdf8; /* Sky 400 */
         }
         
+        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Tag Utilities */
+        .tag-official { background-color: #dbeafe; color: #1e40af; }
+        .tag-research { background-color: #fef3c7; color: #92400e; }
+        .tag-suggest { background-color: #dcfce7; color: #166534; }
     </style>
 </head>
 <body class="flex flex-col md:flex-row min-h-screen">
 
+    <!-- Mobile Header -->
     <header class="md:hidden bg-slate-900 text-white p-4 sticky top-0 z-50 flex justify-between items-center shadow-md">
-        <h1 class="text-lg font-bold truncate">宜商校安戰情儀表板</h1>
-        <button id="mobile-menu-btn" class="p-2 bg-slate-800 rounded focus:outline-none text-xl">
+        <h1 class="text-lg font-bold truncate">宜商校安戰情與研究</h1>
+        <button id="mobile-menu-btn" class="p-2 bg-slate-800 rounded focus:outline-none text-xl transition-colors hover:bg-slate-700">
             &#9776;
         </button>
     </header>
 
+    <!-- Sidebar Navigation -->
     <nav id="sidebar" class="hidden md:flex flex-col w-full md:w-72 lg:w-80 bg-slate-900 text-slate-300 shadow-xl fixed h-full z-40 transition-transform duration-300 overflow-y-auto">
         <div class="p-6 bg-slate-950 border-b border-slate-800">
-            <h1 class="text-xl font-bold leading-tight text-white">🏫 宜蘭高商<br><span class="text-amber-500 text-lg">校安數據與勤務儀表板</span></h1>
-            <p class="text-xs mt-2 text-slate-400">114學年度 | 數據更新與勤務排班</p>
+            <h1 class="text-xl font-bold leading-tight text-white">🏫 宜蘭高商<br><span class="text-sky-400 text-lg">校安數據與勤務儀表板</span></h1>
+            <p class="text-xs mt-2 text-slate-400">114學年度數據更新 & 深度研究</p>
         </div>
-        <div class="p-4 flex flex-col gap-1 text-sm font-medium">
-            <a href="#summary" class="nav-link active p-3 rounded transition-colors hover:bg-slate-800 hover:text-white flex items-center gap-3">📊 總體風險摘要</a>
-            <a href="#traffic-data" class="nav-link p-3 rounded transition-colors hover:bg-slate-800 hover:text-white flex items-center gap-3">🛵 交通事故深度解析</a>
-            <a href="#blind-spots" class="nav-link p-3 rounded transition-colors hover:bg-slate-800 hover:text-white flex items-center gap-3">📍 114-1 危安死角票選</a>
-            <a href="#personnel" class="nav-link p-3 rounded transition-colors hover:bg-slate-800 hover:text-white flex items-center gap-3">📋 人事日誌與勤務排班</a>
+        
+        <div class="flex flex-col pb-6 text-sm font-medium">
+            <!-- Group 1: 114 Dashboard -->
+            <div class="nav-group-title">📍 114學年度即時戰情</div>
+            <a href="#dashboard-summary" class="nav-link p-3 mx-2 rounded transition-colors hover:bg-slate-800 hover:text-white flex items-center gap-3">📊 總體風險摘要</a>
+            <a href="#dashboard-traffic" class="nav-link p-3 mx-2 rounded transition-colors hover:bg-slate-800 hover:text-white flex items-center gap-3">🛵 交通事故深度解析</a>
+            <a href="#dashboard-blindspots" class="nav-link p-3 mx-2 rounded transition-colors hover:bg-slate-800 hover:text-white flex items-center gap-3">📍 危安死角票選</a>
+            <a href="#dashboard-personnel" class="nav-link p-3 mx-2 rounded transition-colors hover:bg-slate-800 hover:text-white flex items-center gap-3">📋 人事日誌與勤務排班</a>
+            
+            <hr class="border-slate-800 my-2 mx-4">
+            
+            <!-- Group 2: Deep Research -->
+            <div class="nav-group-title">📚 深度研究與制度規劃</div>
+            <a href="#report-summary" class="nav-link p-3 mx-2 rounded transition-colors hover:bg-slate-800 hover:text-white flex items-center gap-3">📝 執行摘要與痛點</a>
+            <a href="#report-background" class="nav-link p-3 mx-2 rounded transition-colors hover:bg-slate-800 hover:text-white flex items-center gap-3">📜 制度背景與情境分析</a>
+            <a href="#report-tasks" class="nav-link p-3 mx-2 rounded transition-colors hover:bg-slate-800 hover:text-white flex items-center gap-3">🗂 任務分類與人力模型</a>
+            <a href="#report-risks" class="nav-link p-3 mx-2 rounded transition-colors hover:bg-slate-800 hover:text-white flex items-center gap-3">⚠️ 歷史危安熱區地圖</a>
+            <a href="#report-sop" class="nav-link p-3 mx-2 rounded transition-colors hover:bg-slate-800 hover:text-white flex items-center gap-3">⚙️ SOP 與警政合作</a>
+            <a href="#report-stress" class="nav-link p-3 mx-2 rounded transition-colors hover:bg-slate-800 hover:text-white flex items-center gap-3">🧠 壓力與情緒分析</a>
+            <a href="#report-solutions" class="nav-link p-3 mx-2 rounded transition-colors hover:bg-slate-800 hover:text-white flex items-center gap-3">🚀 數位導入與改善方案</a>
+            <a href="#report-extensions" class="nav-link p-3 mx-2 rounded transition-colors text-sky-400 hover:bg-slate-800 flex items-center gap-3">💡 附加產出(PPT/計畫)</a>
         </div>
     </nav>
 
+    <!-- Main Content -->
     <main class="flex-1 md:ml-72 lg:ml-80 p-4 md:p-6 lg:p-10 w-full max-w-7xl">
         
-        <div class="mb-8 p-6 bg-white rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-amber-500">
-            <h2 class="text-2xl font-bold text-slate-800 mb-2">研究更新前言 (114學年度)</h2>
+        <!-- Unified Intro -->
+        <div class="mb-8 p-6 bg-white rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-sky-500">
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">專案前言 (v1.0 整合版)</h2>
             <p class="text-slate-600 leading-relaxed text-sm md:text-base">
-                本儀表板已整合最新由警政機關提供之「周邊道路肇事清冊」及本校「114-1 學期校園危安死角票選（共 951 份回應）」。數據顯示，交通安全與校外開放空間管理是目前的重點防護項目。同時，為因應教官室編制與學務創新人員的勤務挑戰，本系統特設專區，協助精準掌握人力職掌，以數據為基礎優化值勤排訂。
+                本儀表板整合了「114學年度警政肇事大數據與校園問卷」以及「教官退場後之校安人力深度研究報告」。系統分為上半部的<strong>「即時戰情與勤務排班」</strong>與下半部的<strong>「制度優化與學術分析」</strong>。旨在協助教育行政主管與第一線學務創新人員，快速掌握熱區分佈，並提供具備理論基礎的 SOP 與科技轉型藍圖。
             </p>
+            <div class="mt-4 flex flex-wrap gap-2 text-xs">
+                <span class="px-2 py-1 rounded tag-official font-medium">📜 [官方資料] 警政數據與問卷</span>
+                <span class="px-2 py-1 rounded tag-research font-medium">🔍 [研究推估] 專家分析與模型</span>
+                <span class="px-2 py-1 rounded tag-suggest font-medium">💡 [制度建議] 數位轉型與SOP</span>
+            </div>
         </div>
 
-        <section id="summary" class="mb-12 scroll-mt-20">
+        <!-- ============================================== -->
+        <!-- PART 1: 114學年度即時戰情 (Dashboard) -->
+        <!-- ============================================== -->
+
+        <section id="dashboard-summary" class="mb-16 scroll-mt-24">
             <h2 class="text-2xl font-black text-slate-900 border-b-2 border-slate-200 pb-2 mb-6 flex items-center gap-2">
-                <span class="text-amber-500">&#128202;</span> 總體風險摘要
+                <span class="text-sky-500">&#128202;</span> 總體風險摘要 (114學年度)
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
@@ -104,32 +151,24 @@
             </div>
         </section>
 
-        <section id="traffic-data" class="mb-12 scroll-mt-20">
+        <section id="dashboard-traffic" class="mb-16 scroll-mt-24">
             <h2 class="text-2xl font-black text-slate-900 border-b-2 border-slate-200 pb-2 mb-6 flex items-center gap-2">
-                <span class="text-amber-500">&#128653;</span> 交通事故深度解析
+                <span class="text-sky-500">&#128653;</span> 交通事故深度解析
             </h2>
-            <p class="text-sm text-slate-600 mb-6">整合肇事地點、時間與原因進行交叉比對。顯示本校周邊交通維護需側重於「東港路二段」與「機車防禦駕駛宣導」。</p>
-
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                     <h3 class="font-bold text-slate-800 mb-4 text-center">肇事熱點排行 (Top 10 地段)</h3>
-                    <div class="chart-container">
-                        <canvas id="locationChart"></canvas>
-                    </div>
+                    <div class="chart-container"><canvas id="locationChart"></canvas></div>
                 </div>
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                     <h3 class="font-bold text-slate-800 mb-4 text-center">高發時段與傷亡分佈</h3>
-                    <div class="chart-container">
-                        <canvas id="timeChart"></canvas>
-                    </div>
+                    <div class="chart-container"><canvas id="timeChart"></canvas></div>
                 </div>
             </div>
-
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                 <h3 class="font-bold text-slate-800 mb-4">肇事原因與碰撞類型矩陣</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                     <div>
-                        <h4 class="text-sm font-bold text-slate-500 mb-3 border-b pb-1">主要肇事原因 (Top 5)</h4>
                         <ul class="space-y-3">
                             <li class="flex justify-between items-center text-sm">
                                 <span class="bg-red-100 text-red-800 px-2 py-1 rounded">24件</span>
@@ -147,151 +186,63 @@
                                 <span class="bg-slate-100 text-slate-800 px-2 py-1 rounded">20件</span>
                                 <span class="flex-1 ml-3 text-slate-700">恍神、緊張、心不在焉分心駕駛</span>
                             </li>
-                            <li class="flex justify-between items-center text-sm">
-                                <span class="bg-slate-100 text-slate-800 px-2 py-1 rounded">17件</span>
-                                <span class="flex-1 ml-3 text-slate-700">有號誌路口，轉彎未讓直行車</span>
-                            </li>
                         </ul>
                     </div>
                     <div class="relative flex items-center justify-center">
-                        <div class="w-full max-w-[250px]">
-                            <canvas id="collisionTypeChart"></canvas>
-                        </div>
-                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-4">
-                            <span class="text-xs text-slate-400">主要類型</span>
-                            <span class="font-bold text-slate-700">車與車</span>
-                        </div>
+                        <div class="w-full max-w-[250px]"><canvas id="collisionTypeChart"></canvas></div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section id="blind-spots" class="mb-12 scroll-mt-20">
+        <section id="dashboard-blindspots" class="mb-16 scroll-mt-24">
             <h2 class="text-2xl font-black text-slate-900 border-b-2 border-slate-200 pb-2 mb-6 flex items-center gap-2">
-                <span class="text-amber-500">&#128205;</span> 114-1 危安死角票選 (951人參與)
+                <span class="text-sky-500">&#128205;</span> 114-1 危安死角票選 (951人參與)
             </h2>
-            <p class="text-sm text-slate-600 mb-6">根據最新全校師生問卷調查，重新界定巡查熱區。校外開放空間的潛在風險已大幅超越校內封閉設施，需調整聯合巡查路線。</p>
-
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div class="bg-slate-50 p-6 rounded-xl border border-slate-200">
                     <h3 class="font-bold text-lg text-slate-800 mb-4 flex items-center gap-2"><span>🏫</span> 校內危安區域 (Top 5)</h3>
                     <div class="space-y-4">
+                        <!-- Progress Bars -->
                         <div>
-                            <div class="flex justify-between text-sm font-bold text-slate-700 mb-1">
-                                <span>腳踏車停車場</span>
-                                <span>311 票</span>
-                            </div>
-                            <div class="w-full bg-slate-200 rounded-full h-2.5">
-                                <div class="bg-blue-600 h-2.5 rounded-full" style="width: 32.7%"></div>
-                            </div>
+                            <div class="flex justify-between text-sm font-bold text-slate-700 mb-1"><span>腳踏車停車場</span><span>311 票</span></div>
+                            <div class="w-full bg-slate-200 rounded-full h-2.5"><div class="bg-blue-600 h-2.5 rounded-full" style="width: 32.7%"></div></div>
                         </div>
                         <div>
-                            <div class="flex justify-between text-sm font-bold text-slate-700 mb-1">
-                                <span>電機、機車停車場</span>
-                                <span>272 票</span>
-                            </div>
-                            <div class="w-full bg-slate-200 rounded-full h-2.5">
-                                <div class="bg-blue-500 h-2.5 rounded-full" style="width: 28.6%"></div>
-                            </div>
+                            <div class="flex justify-between text-sm font-bold text-slate-700 mb-1"><span>電機、機車停車場</span><span>272 票</span></div>
+                            <div class="w-full bg-slate-200 rounded-full h-2.5"><div class="bg-blue-500 h-2.5 rounded-full" style="width: 28.6%"></div></div>
                         </div>
                         <div>
-                            <div class="flex justify-between text-sm font-bold text-slate-700 mb-1">
-                                <span>司令台後方</span>
-                                <span>196 票</span>
-                            </div>
-                            <div class="w-full bg-slate-200 rounded-full h-2.5">
-                                <div class="bg-sky-500 h-2.5 rounded-full" style="width: 20.6%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-sm font-bold text-slate-700 mb-1">
-                                <span>資源回收場</span>
-                                <span>150 票</span>
-                            </div>
-                            <div class="w-full bg-slate-200 rounded-full h-2.5">
-                                <div class="bg-sky-400 h-2.5 rounded-full" style="width: 15.7%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-sm font-bold text-slate-700 mb-1">
-                                <span>網球場後方</span>
-                                <span>114 票</span>
-                            </div>
-                            <div class="w-full bg-slate-200 rounded-full h-2.5">
-                                <div class="bg-sky-300 h-2.5 rounded-full" style="width: 11.9%"></div>
-                            </div>
+                            <div class="flex justify-between text-sm font-bold text-slate-700 mb-1"><span>司令台後方</span><span>196 票</span></div>
+                            <div class="w-full bg-slate-200 rounded-full h-2.5"><div class="bg-sky-500 h-2.5 rounded-full" style="width: 20.6%"></div></div>
                         </div>
                     </div>
                 </div>
-
                 <div class="bg-amber-50 p-6 rounded-xl border border-amber-200">
                     <h3 class="font-bold text-lg text-amber-900 mb-4 flex items-center gap-2"><span>🌆</span> 校外重點巡查區域 (Top 5)</h3>
                     <div class="space-y-4">
                         <div class="group relative">
-                            <div class="flex justify-between text-sm font-bold text-red-700 mb-1">
-                                <span>丟丟噹廣場</span>
-                                <span>480 票 (50.5%)</span>
-                            </div>
-                            <div class="w-full bg-amber-200 rounded-full h-3">
-                                <div class="bg-red-600 h-3 rounded-full" style="width: 50.5%"></div>
-                            </div>
-                            <div class="hidden group-hover:block absolute z-10 bg-white p-2 text-xs border border-slate-200 shadow-lg rounded mt-1">
-                                建議對策：列為放學後及青春專案首要聯合巡查點。
-                            </div>
+                            <div class="flex justify-between text-sm font-bold text-red-700 mb-1"><span>丟丟噹廣場</span><span>480 票 (50.5%)</span></div>
+                            <div class="w-full bg-amber-200 rounded-full h-3"><div class="bg-red-600 h-3 rounded-full" style="width: 50.5%"></div></div>
+                            <div class="hidden group-hover:block absolute z-10 bg-white p-2 text-xs border border-slate-200 shadow-lg rounded mt-1">建議對策：列為放學後及青春專案首要聯合巡查點。</div>
                         </div>
                         <div>
-                            <div class="flex justify-between text-sm font-bold text-amber-800 mb-1">
-                                <span>宜蘭火車站後站</span>
-                                <span>267 票 (28.1%)</span>
-                            </div>
-                            <div class="w-full bg-amber-200 rounded-full h-2.5">
-                                <div class="bg-orange-500 h-2.5 rounded-full" style="width: 28.1%"></div>
-                            </div>
+                            <div class="flex justify-between text-sm font-bold text-amber-800 mb-1"><span>宜蘭火車站後站</span><span>267 票 (28.1%)</span></div>
+                            <div class="w-full bg-amber-200 rounded-full h-2.5"><div class="bg-orange-500 h-2.5 rounded-full" style="width: 28.1%"></div></div>
                         </div>
                         <div>
-                            <div class="flex justify-between text-sm font-bold text-amber-800 mb-1">
-                                <span>行口後面</span>
-                                <span>262 票 (27.5%)</span>
-                            </div>
-                            <div class="w-full bg-amber-200 rounded-full h-2.5">
-                                <div class="bg-orange-400 h-2.5 rounded-full" style="width: 27.5%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-sm font-bold text-amber-800 mb-1">
-                                <span>黎明國小</span>
-                                <span>150 票 (15.8%)</span>
-                            </div>
-                            <div class="w-full bg-amber-200 rounded-full h-2.5">
-                                <div class="bg-amber-500 h-2.5 rounded-full" style="width: 15.8%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex justify-between text-sm font-bold text-amber-800 mb-1">
-                                <span>延平路 7-11 / 糧倉1號周邊</span>
-                                <span>~150 票共伴效應</span>
-                            </div>
-                            <div class="w-full bg-amber-200 rounded-full h-2.5">
-                                <div class="bg-amber-400 h-2.5 rounded-full" style="width: 15.8%"></div>
-                            </div>
+                            <div class="flex justify-between text-sm font-bold text-amber-800 mb-1"><span>行口後面</span><span>262 票 (27.5%)</span></div>
+                            <div class="w-full bg-amber-200 rounded-full h-2.5"><div class="bg-orange-400 h-2.5 rounded-full" style="width: 27.5%"></div></div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section id="personnel" class="mb-12 scroll-mt-20">
+        <section id="dashboard-personnel" class="mb-16 scroll-mt-24">
             <h2 class="text-2xl font-black text-slate-900 border-b-2 border-slate-200 pb-2 mb-6 flex items-center gap-2">
-                <span class="text-amber-500">&#128193;</span> 人事日誌與勤務排班統籌中心
+                <span class="text-sky-500">&#128193;</span> 人事日誌與勤務排班統籌中心
             </h2>
-            
-            <div class="bg-slate-900 text-white p-6 rounded-xl shadow-lg mb-6">
-                <h3 class="text-lg font-bold text-sky-300 mb-2">114-2 學期勤務調度挑戰與策略</h3>
-                <p class="text-sm text-slate-300 leading-relaxed">
-                    校園安全維護賴於嚴謹的輪值與精確的分工。在統籌<strong class="text-white bg-slate-700 px-1 rounded">每月值勤排訂與值班費</strong>計算，以及彙整繁雜的<strong class="text-white bg-slate-700 px-1 rounded">每月工作日誌</strong>時，必須精確調配跨編制（教官、學創人員）的工作能量。依據本學期職掌，除了需因應常規的「防毒、交通、防災」專項外，更需將前述的「交通肇事熱區」與「死角熱點」無縫融入每日 07:00-17:30 的三階段勤務之中，確保人力不重疊、不真空。
-                </p>
-            </div>
-
             <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
                 <div class="xl:col-span-2 bg-white p-0 rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                     <div class="bg-slate-100 p-4 border-b border-slate-200 font-bold text-slate-800">
@@ -309,55 +260,219 @@
                             </thead>
                             <tbody class="divide-y divide-slate-100">
                                 <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="highlightDuty('gao')">
-                                    <td class="p-3 font-bold text-slate-700">主任教官</td>
-                                    <td class="p-3">高榮新</td>
-                                    <td class="p-3 text-slate-600">督導全般校安、全民國防與友善校園</td>
-                                    <td class="p-3">防制霸凌、友善校園週</td>
+                                    <td class="p-3 font-bold text-slate-700">主任教官</td><td class="p-3">高榮新</td>
+                                    <td class="p-3 text-slate-600">督導全般校安、全民國防與友善校園</td><td class="p-3">防制霸凌、友善校園週</td>
                                 </tr>
                                 <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="highlightDuty('cai')">
-                                    <td class="p-3 font-bold text-slate-700">生輔組長</td>
-                                    <td class="p-3">蔡坤龍</td>
-                                    <td class="p-3 text-slate-600">警局支援協訂、偏差行為處理</td>
-                                    <td class="p-3">新生始業、慶典活動公差</td>
+                                    <td class="p-3 font-bold text-slate-700">生輔組長</td><td class="p-3">蔡坤龍</td>
+                                    <td class="p-3 text-slate-600">警局支援協訂、偏差行為處理</td><td class="p-3">新生始業、慶典活動公差</td>
                                 </tr>
                                 <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="highlightDuty('shi')">
-                                    <td class="p-3 font-bold text-slate-700">校安</td>
-                                    <td class="p-3">石育全</td>
-                                    <td class="p-3 text-slate-600">學期勤務大表維護、性平通報</td>
-                                    <td class="p-3">防制藥物濫用、交通糾察選訓</td>
+                                    <td class="p-3 font-bold text-slate-700">校安</td><td class="p-3">石育全</td>
+                                    <td class="p-3 text-slate-600">學期勤務大表維護、性平通報</td><td class="p-3">防制藥物濫用、交通糾察選訓</td>
                                 </tr>
                                 <tr class="hover:bg-sky-50 transition-colors cursor-pointer bg-slate-50 border-l-4 border-l-sky-500" onclick="highlightDuty('li_l')">
-                                    <td class="p-3 font-bold text-sky-800">校安</td>
-                                    <td class="p-3 font-bold text-sky-800">李亮頡</td>
-                                    <td class="p-3 text-slate-800 font-medium">人事作業 (每月值勤排訂/值班費、工作日誌)</td>
-                                    <td class="p-3">課程教學進度控管</td>
+                                    <td class="p-3 font-bold text-sky-800">校安</td><td class="p-3 font-bold text-sky-800">李亮頡</td>
+                                    <td class="p-3 text-slate-800 font-medium">人事作業 (每月值勤排班/值班費、日誌統籌)</td><td class="p-3">課程教學進度控管</td>
                                 </tr>
                                 <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="highlightDuty('li_m')">
-                                    <td class="p-3 font-bold text-slate-700">校安</td>
-                                    <td class="p-3">李明貞</td>
-                                    <td class="p-3 text-slate-600">研討辦理、軍保與公車協調</td>
-                                    <td class="p-3">全民國防(實彈射擊)、交通安全宣導</td>
+                                    <td class="p-3 font-bold text-slate-700">校安</td><td class="p-3">李明貞</td>
+                                    <td class="p-3 text-slate-600">研討辦理、軍保與公車協調</td><td class="p-3">全民國防(實彈射擊)、交通安全宣導</td>
                                 </tr>
                                 <tr class="hover:bg-slate-50 transition-colors cursor-pointer" onclick="highlightDuty('huang')">
-                                    <td class="p-3 font-bold text-slate-700">校安</td>
-                                    <td class="p-3">黃英樺</td>
-                                    <td class="p-3 text-slate-600">班級速報單、校外會資料蒐整</td>
-                                    <td class="p-3">工讀/賃居訪視、駐站聯巡排訂</td>
+                                    <td class="p-3 font-bold text-slate-700">校安</td><td class="p-3">黃英樺</td>
+                                    <td class="p-3 text-slate-600">班級速報單、校外會資料蒐整</td><td class="p-3">工讀/賃居訪視、駐站聯巡排訂</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col">
+                    <h4 class="font-bold text-slate-800 mb-2 border-b pb-2">排班與日誌管理建議</h4>
+                    <p class="text-sm text-slate-600 mb-4" id="dutyDescription">
+                        點擊左側人員列表，檢視針對該職位的協作與排班優化建議。在每月排訂值勤表時，需確保各專項任務皆有對應負責人員在場。
+                    </p>
+                    <div class="mt-auto bg-sky-50 border border-sky-200 p-3 rounded text-sm text-sky-800">
+                        <strong>💡 數位日誌整合：</strong><br>建議導入線上表單供值周填報。月底彙整「每月工作日誌」時可直接匯出 CSV，大幅減少人工作業。
+                    </div>
+                </div>
+            </div>
+        </section>
 
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between" id="dutyDetailCard">
-                    <div>
-                        <h4 class="font-bold text-slate-800 mb-2 border-b pb-2">排班與日誌管理建議</h4>
-                        <p class="text-sm text-slate-600 mb-4" id="dutyDescription">
-                            點擊左側人員列表，檢視針對該職位的協作與排班優化建議。在每月排訂值勤表時，需確保各專項任務（如青春專案聯巡、交通導護）皆有對應負責人員在場。
-                        </p>
-                        <div class="bg-amber-50 border border-amber-200 p-3 rounded text-sm text-amber-800">
-                            <strong>💡 數位日誌整合：</strong><br>建議導入線上表單供值周與值勤人員每日即時填報。月底彙整「每月工作日誌」時，可直接匯出 CSV 進行交叉比對，大幅減少人工作業時間。
+        <!-- 分界線 -->
+        <div class="flex items-center gap-4 my-16">
+            <hr class="flex-1 border-slate-300">
+            <span class="text-slate-400 font-bold uppercase tracking-widest text-sm">以下為深度研究分析</span>
+            <hr class="flex-1 border-slate-300">
+        </div>
+
+        <!-- ============================================== -->
+        <!-- PART 2: 深度研究與制度規劃 (Report) -->
+        <!-- ============================================== -->
+
+        <section id="report-summary" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl font-black text-slate-900 border-b-4 border-sky-600 inline-block pb-2 mb-6">A. 執行摘要</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <div class="text-3xl mb-2">🚨</div>
+                    <h3 class="font-bold text-lg mb-2 text-slate-800">核心痛點</h3>
+                    <p class="text-slate-600 text-sm">教官退出校園後，學務創新人員面臨「任務包山包海」與「輔導/管教界線模糊」的雙重夾擊，導致情緒耗竭。</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <div class="text-3xl mb-2">📍</div>
+                    <h3 class="font-bold text-lg mb-2 text-slate-800">風險熱區洞察</h3>
+                    <p class="text-slate-600 text-sm">分析指出，校外交通事故高度集中於「和睦路周邊」。需針對熱區實施精準巡邏與科技執法輔助。</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                    <div class="text-3xl mb-2">🛡️</div>
+                    <h3 class="font-bold text-lg mb-2 text-slate-800">優化策略</h3>
+                    <p class="text-slate-600 text-sm">提出「勤務三級分流SOP」、「警政協作模型」，建議導入「AI影像辨識預警」與「數位化自動通報App」。</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="report-background" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl font-black text-slate-900 border-b-4 border-sky-600 inline-block pb-2 mb-6">B/C. 制度背景與宜商情境分析</h2>
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2">
+                    <div class="p-8 bg-slate-50 border-b lg:border-b-0 lg:border-r border-slate-200">
+                        <h3 class="font-bold text-xl text-sky-800 mb-4">📜 台灣校安制度演變</h3>
+                        <ul class="space-y-4 text-sm text-slate-700">
+                            <li><strong>轉型期：</strong>軍訓教官逐步退出，由「學務創新人員」接手。<span class="tag-official text-[10px] px-1 rounded ml-1">官方</span></li>
+                            <li><strong>法定職責：</strong>涵蓋安全維護、藥物濫用防制、霸凌防制等。</li>
+                            <li><strong>制度缺陷：</strong>新進人員缺乏軍職「威嚇力」與「警政聯繫脈絡」，定位不明。</li>
+                        </ul>
+                    </div>
+                    <div class="p-8">
+                        <h3 class="font-bold text-xl text-sky-800 mb-4">🏫 SWOT 分析</h3>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div class="bg-green-50 p-3 rounded border border-green-100"><strong class="text-green-800">優勢 (S)</strong><br><span class="text-slate-600">既有通報體系完整。</span></div>
+                            <div class="bg-red-50 p-3 rounded border border-red-100"><strong class="text-red-800">劣勢 (W)</strong><br><span class="text-slate-600">面積廣大死角多，交通風險高。</span></div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="report-tasks" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl font-black text-slate-900 border-b-4 border-sky-600 inline-block pb-2 mb-6">D/E. 任務分類與人力配置模型</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-7 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-lg mb-4 text-slate-800">任務拆解矩陣 (Daily Task Breakdown)</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="border border-sky-200 bg-sky-50 rounded-lg p-4">
+                            <div class="text-sky-700 font-bold mb-2 border-b border-sky-200 pb-1">一級：例行預防 (高頻/低危)</div>
+                            <ul class="text-sm text-slate-700 list-disc pl-4"><li>交導管制</li><li>死角定點巡查</li></ul>
+                        </div>
+                        <div class="border border-red-200 bg-red-50 rounded-lg p-4">
+                            <div class="text-red-700 font-bold mb-2 border-b border-red-200 pb-1">三級：危機應變 (低頻/高危)</div>
+                            <ul class="text-sm text-slate-700 list-disc pl-4"><li>暴力事件處理</li><li>校安即時通報</li></ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="lg:col-span-5 bg-slate-800 text-white p-6 rounded-xl shadow-sm border border-slate-700">
+                    <h3 class="font-bold text-lg mb-4 text-sky-300">動態人力配置模型 (三班制推估)</h3>
+                    <div class="space-y-4">
+                        <div class="bg-slate-700 p-3 rounded">
+                            <div class="flex justify-between items-center mb-1"><span class="font-bold">白班 (07:00-16:00)</span><span class="text-xs bg-slate-600 px-2 py-1 rounded">主力配置</span></div>
+                            <p class="text-xs text-slate-300">因應交通、衝突。建議配置 60% 人力。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- F section mapped into HTML2 Traffic chart -> Merged Historical Data Chart -->
+        <section id="report-risks" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl font-black text-slate-900 border-b-4 border-sky-600 inline-block pb-2 mb-6">F. 歷史危安熱區比較分析</h2>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <h3 class="font-bold text-lg mb-4 text-slate-800 text-center">歷年校外肇事地點排行對比 (Top 6)</h3>
+                <div class="chart-container"><canvas id="trafficHistoricalChart"></canvas></div>
+            </div>
+        </section>
+
+        <section id="report-sop" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl font-black text-slate-900 border-b-4 border-sky-600 inline-block pb-2 mb-6">G/H. 校安通報SOP與警政跨網協作模型</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-lg mb-6 text-center text-slate-800">事件應變處理 SOP</h3>
+                    <div class="flex flex-col items-center">
+                        <div class="w-full max-w-sm bg-blue-50 border-2 border-blue-400 rounded-lg p-3 text-center shadow"><div class="font-bold text-blue-800">1. 獲報與現場控制</div></div>
+                        <div class="h-6 w-1 bg-blue-400 my-1"></div>
+                        <div class="w-full max-w-sm bg-orange-50 border-2 border-orange-400 rounded-lg p-3 text-center shadow mt-1"><div class="font-bold text-orange-800">2. 判定層級與外部通報 (110)</div></div>
+                    </div>
+                </div>
+                <div class="bg-slate-50 p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="font-bold text-lg mb-4 text-slate-800 text-center">區域聯防運作機制</h3>
+                    <ul class="text-sm text-slate-600 list-disc pl-5 space-y-2 mt-2">
+                        <li><strong>LINE 暢通群組：</strong>建立校安與管區快反群組。</li>
+                        <li><strong>熱點共同巡查：</strong>針對高肇事地段實施聯合巡邏。</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="report-stress" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl font-black text-slate-900 border-b-4 border-sky-600 inline-block pb-2 mb-6">I. 人力壓力與情緒分析</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <div class="chart-container"><canvas id="stressChart"></canvas></div>
+                </div>
+                <div class="space-y-4">
+                    <div class="p-4 bg-white border-l-4 border-red-500 rounded shadow-sm">
+                        <h4 class="font-bold text-red-700">1. 輔導與管教界線模糊</h4>
+                        <p class="text-sm text-slate-600">兼顧「黑臉」與「白臉」，引發專業定位與信任危機。</p>
+                    </div>
+                    <div class="p-4 bg-white border-l-4 border-orange-500 rounded shadow-sm">
+                        <h4 class="font-bold text-orange-700">2. 情緒勞務耗竭</h4>
+                        <p class="text-sm text-slate-600">長期面對衝突，缺乏心理支持與督導系統。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="report-solutions" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl font-black text-slate-900 border-b-4 border-sky-600 inline-block pb-2 mb-6">J/K. 數位轉型與改善方案</h2>
+            <div class="bg-gradient-to-r from-slate-900 to-slate-800 text-white p-8 rounded-xl shadow-lg mb-8">
+                <h3 class="font-bold text-2xl text-sky-300 mb-4 flex items-center gap-2">🤖 AI與數位化導入建議</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-slate-800/50 p-4 border border-slate-600 rounded">
+                        <h4 class="font-bold text-lg mb-2">👁️ 智慧影像監控</h4>
+                        <p class="text-sm text-slate-300">防墜、人群異常辨識。</p>
+                    </div>
+                    <div class="bg-slate-800/50 p-4 border border-slate-600 rounded">
+                        <h4 class="font-bold text-lg mb-2">📱 一鍵通報 App</h4>
+                        <p class="text-sm text-slate-300">定位與自動生成初稿。</p>
+                    </div>
+                    <div class="bg-slate-800/50 p-4 border border-slate-600 rounded">
+                        <h4 class="font-bold text-lg mb-2">🧠 NLP 生成日誌</h4>
+                        <p class="text-sm text-slate-300">語音摘要轉文字，減輕文書負擔。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Extensions Tabs -->
+        <section id="report-extensions" class="mb-16 scroll-mt-24">
+            <h2 class="text-3xl font-black text-sky-800 border-b-4 border-slate-300 inline-block pb-2 mb-6">💡 附加產出 (學術與實務擴充)</h2>
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="flex border-b border-slate-200 bg-slate-50 overflow-x-auto text-sm font-bold">
+                    <button class="tab-btn px-6 py-4 text-sky-700 border-b-2 border-sky-600" data-target="tab-ppt">簡報架構 (20頁)</button>
+                    <button class="tab-btn px-6 py-4 text-slate-500 hover:text-sky-600" data-target="tab-research">研究計畫 & 變項</button>
+                    <button class="tab-btn px-6 py-4 text-slate-500 hover:text-sky-600" data-target="tab-interview">深度訪綱</button>
+                </div>
+                <div class="p-6">
+                    <div id="tab-ppt" class="tab-content block">
+                        <h3 class="font-bold text-lg mb-4">適合簡報的 20 頁 PPT 架構</h3>
+                        <p class="text-sm text-slate-600">涵蓋破題、數據分析、痛點揭露、解決方案等四大模組，支援高階決策會議提案。</p>
+                    </div>
+                    <div id="tab-research" class="tab-content hidden">
+                        <h3 class="font-bold text-lg mb-4">研究計畫題目建議</h3>
+                        <ul class="list-disc pl-5 text-sm text-slate-700"><li>結合AI影像辨識之校園風險死角巡防優化研究</li></ul>
+                    </div>
+                    <div id="tab-interview" class="tab-content hidden">
+                        <h3 class="font-bold text-lg mb-4">半結構式訪談大綱</h3>
+                        <p class="text-sm text-slate-700">聚焦勤務負荷、角色定位與壓力來源。</p>
                     </div>
                 </div>
             </div>
@@ -365,131 +480,144 @@
 
     </main>
 
+    <!-- Unified Scripts -->
     <script>
-        // --- Navigation Logic ---
-        const sections = document.querySelectorAll('section');
-        const navLinks = document.querySelectorAll('.nav-link');
-
-        window.addEventListener('scroll', () => {
-            let current = '';
-            sections.forEach(section => {
-                const sectionTop = section.offsetTop;
-                if (scrollY >= sectionTop - 100) {
-                    current = section.getAttribute('id');
-                }
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- 1. Mobile Menu Toggle ---
+            const mobileBtn = document.getElementById('mobile-menu-btn');
+            const sidebar = document.getElementById('sidebar');
+            mobileBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('hidden');
             });
-            navLinks.forEach(link => {
-                link.classList.remove('active', 'bg-slate-800', 'text-white');
-                if (link.getAttribute('href').includes(current)) {
-                    link.classList.add('active', 'bg-slate-800', 'text-white');
-                }
+
+            // --- 2. Scroll Spy Logic ---
+            const sections = document.querySelectorAll('section[id]');
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            const handleScrollSpy = () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (window.scrollY >= sectionTop - 150) {
+                        current = section.getAttribute('id');
+                    }
+                });
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').includes(current) && current !== '') {
+                        link.classList.add('active');
+                    }
+                });
+            };
+            window.addEventListener('scroll', handleScrollSpy);
+            handleScrollSpy(); // Initial trigger
+
+            // --- 3. Tabs Logic ---
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    tabBtns.forEach(b => {
+                        b.classList.remove('text-sky-700', 'border-b-2', 'border-sky-600');
+                        b.classList.add('text-slate-500');
+                    });
+                    tabContents.forEach(c => c.classList.add('hidden'));
+                    btn.classList.remove('text-slate-500');
+                    btn.classList.add('text-sky-700', 'border-b-2', 'border-sky-600');
+                    document.getElementById(btn.getAttribute('data-target')).classList.remove('hidden');
+                });
             });
-        });
 
-        const mobileBtn = document.getElementById('mobile-menu-btn');
-        const sidebar = document.getElementById('sidebar');
-        mobileBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('hidden');
-            if(!sidebar.classList.contains('hidden')){
-               sidebar.style.transform = 'translateX(0)'; 
-            }
-        });
-
-        // --- Chart.js Data & Logic ---
-
-        // 1. Location Bar Chart (From 肇事地點排行.xlsx CSV)
-        const ctxLocation = document.getElementById('locationChart').getContext('2d');
-        new Chart(ctxLocation, {
-            type: 'bar',
-            data: {
-                labels: ['東港路二段', '宜興路一段', '和睦路/康樂路', '校舍路', '延平路', '東港/林森路口', '女中路一段', '和睦/聖後街', '和睦/新民路', '林森路'],
-                datasets: [{
-                    label: '肇事件數',
-                    data: [29, 18, 12, 9, 9, 9, 8, 7, 7, 7],
-                    backgroundColor: '#0284c7', // Sky 600
-                    borderRadius: 4,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                indexAxis: 'y',
-                plugins: { legend: { display: false } },
-                scales: { x: { beginAtZero: true } }
-            }
-        });
-
-        // 2. Time Distribution Chart (From 好發時段排行.xlsx CSV)
-        const ctxTime = document.getElementById('timeChart').getContext('2d');
-        new Chart(ctxTime, {
-            type: 'bar',
-            data: {
-                labels: ['12-18時', '07-11時', '19-23時', '00-06時'],
-                datasets: [
-                    {
-                        label: '受傷人數',
-                        data: [169, 126, 56, 26],
-                        backgroundColor: '#dc2626', // Red 600
-                        borderRadius: 4,
+            // --- 4. Chart.js Initialization ---
+            Chart.defaults.font.family = "'Noto Sans TC', sans-serif";
+            
+            // A. Location Bar Chart (114)
+            if(document.getElementById('locationChart')) {
+                new Chart(document.getElementById('locationChart').getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['東港路二段', '宜興路一段', '和睦路/康樂路', '校舍路', '延平路'],
+                        datasets: [{ label: '肇事件數', data: [29, 18, 12, 9, 9], backgroundColor: '#0284c7', borderRadius: 4 }]
                     },
-                    {
-                        label: '肇事件數',
-                        data: [130, 93, 41, 17],
-                        backgroundColor: '#f59e0b', // Amber 500
-                        borderRadius: 4,
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { position: 'top' } },
-                scales: { y: { beginAtZero: true } }
+                    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } } }
+                });
+            }
+
+            // B. Time Chart (114)
+            if(document.getElementById('timeChart')) {
+                new Chart(document.getElementById('timeChart').getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['12-18時', '07-11時', '19-23時', '00-06時'],
+                        datasets: [
+                            { label: '受傷人數', data: [169, 126, 56, 26], backgroundColor: '#dc2626', borderRadius: 4 },
+                            { label: '肇事件數', data: [130, 93, 41, 17], backgroundColor: '#f59e0b', borderRadius: 4 }
+                        ]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+
+            // C. Collision Doughnut (114)
+            if(document.getElementById('collisionTypeChart')) {
+                new Chart(document.getElementById('collisionTypeChart').getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['側撞', '同向擦撞', '路口交岔撞', '其他'],
+                        datasets: [{ data: [61, 47, 45, 95], backgroundColor: ['#dc2626', '#ea580c', '#d97706', '#94a3b8'], borderWidth: 1 }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { display: false } } }
+                });
+            }
+
+            // D. Historical Traffic Chart (From HTML 1)
+            if(document.getElementById('trafficHistoricalChart')) {
+                new Chart(document.getElementById('trafficHistoricalChart').getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['和睦/康樂路', '宜興路一段', '和睦/聖後街', '東港路二段', '校舍路'],
+                        datasets: [
+                            { label: '歷年受傷人數均值', data: [3, 3, 2, 2, 2], backgroundColor: 'rgba(3, 105, 161, 0.8)', borderRadius: 4 },
+                            { label: '歷年肇事件數均值', data: [2, 2, 1, 1, 1], backgroundColor: 'rgba(148, 163, 184, 0.8)', borderRadius: 4 }
+                        ]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { position: 'bottom' } } }
+                });
+            }
+
+            // E. Stress Radar Chart
+            if(document.getElementById('stressChart')) {
+                new Chart(document.getElementById('stressChart').getContext('2d'), {
+                    type: 'radar',
+                    data: {
+                        labels: ['工時作息', '角色衝突', '情緒耗竭', '系統支持缺乏', '家長應對', '突發危機'],
+                        datasets: [
+                            { label: '學創人員壓力', data: [8.5, 9.0, 8.0, 7.5, 8.0, 9.5], borderColor: '#dc2626', backgroundColor: 'rgba(220, 38, 38, 0.2)', borderWidth: 2 },
+                            { label: '一般行政對照', data: [4.0, 3.0, 4.5, 4.0, 5.0, 3.0], borderColor: '#94a3b8', backgroundColor: 'rgba(148, 163, 184, 0.2)', borderWidth: 1, borderDash: [5, 5] }
+                        ]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
             }
         });
 
-        // 3. Collision Type Doughnut (From 肇事碰撞類型排行.xlsx CSV)
-        const ctxCollision = document.getElementById('collisionTypeChart').getContext('2d');
-        new Chart(ctxCollision, {
-            type: 'doughnut',
-            data: {
-                labels: ['側撞', '同向擦撞', '路口交岔撞', '其他車與車', '追撞', '翻車/摔倒'],
-                datasets: [{
-                    data: [61, 47, 45, 43, 33, 19],
-                    backgroundColor: ['#dc2626', '#ea580c', '#d97706', '#64748b', '#334155', '#94a3b8'],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '70%',
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) { return context.label + ': ' + context.raw + ' 件'; }
-                        }
-                    }
-                }
-            }
-        });
-
-        // --- Interaction Logic for Personnel Matrix ---
+        // --- 5. Personnel Duty Highlight ---
         const dutyDescriptions = {
             gao: "作為總督導，需確保整體排班符合法定工時，並在重大校安事件時具備最高決策權。",
-            cai: "排班時需注意避開蔡組長處理新生始業或重大慶典籌備的高峰期，確保緊急事件有替補人力接手偏差行為處理。",
-            shi: "因負責交通糾察與學期勤務大表維護，月底與人事協調次月排班時，需確保交通熱點（東港路、宜興路）導護人力充足。",
-            li_l: "<strong>排班與日誌統籌視角：</strong><br>匯集各項專案勤務需求，運用數位表單追蹤每位同仁的工作日誌。排班時需平衡各人的專項負擔，並核算精確的每月值班費，是維持團隊運作順暢的核心中樞。",
-            li_m: "負責交通安全宣導與實彈射擊。當辦理全民國防等大型外出專案時，需於當月排班表中提前註記，安排留守替代人力。",
-            huang: "負責駐站與聯巡排訂。與人事排班高度連動，需確保夜間或假日聯合巡查時段，值班表上有明確對應之人力，並同步於日誌中留存訪視紀錄。"
+            cai: "排班時需注意避開蔡組長處理新生始業或重大慶典籌備的高峰期。",
+            shi: "因負責交通糾察與學期勤務大表維護，月底協調排班時，需確保交通熱點導護人力充足。",
+            li_l: "<strong>排班與日誌統籌視角：</strong><br>匯集專案勤務需求，運用數位表單追蹤同仁日誌。排班需平衡專項負擔，核算值班費，是運作樞紐。",
+            li_m: "辦理全民國防等大型外出專案時，需於當月排班表中提前註記，安排留守替代人力。",
+            huang: "負責聯巡排訂。需確保夜間或假日聯合巡查時段，值班表上有對應人力並留存紀錄。"
         };
-
-        function highlightDuty(personId) {
+        
+        // Make global to be accessible by inline onclick
+        window.highlightDuty = function(personId) {
             const descArea = document.getElementById('dutyDescription');
             descArea.innerHTML = dutyDescriptions[personId];
             descArea.classList.add('bg-slate-50', 'p-3', 'rounded', 'border', 'border-slate-200');
-        }
+        };
     </script>
 </body>
 </html>
